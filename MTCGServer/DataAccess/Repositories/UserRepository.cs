@@ -1,5 +1,5 @@
-﻿using MTCGServer.Models.SerializationObjects;
-using MTCGServer.Models.UserModels;
+﻿using MTCGServer.DataAccess.Base;
+using MTCGServer.Models.DataModels;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -8,40 +8,49 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCGServer.DataAccess.Repositorys
+namespace MTCGServer.DataAccess.Repositories
 {
-    public class UserRepository
+    internal class UserRepository : BaseRepository
     {
-        // private variables
-        private readonly string _connectionString;
-
         // constructor
-        public UserRepository(string connectionString)
+        public UserRepository(IDbConnection connection)
+            : base(connection) { }
+
+        // CREATE
+
+        public void CreateUser(User user)
         {
-            _connectionString = connectionString;
+            // create Command
+            using NpgsqlCommand command = new ();
+            command.CommandText = "INSERT INTO users (username, password, bio, image) " +
+                                  "VALUES (@username, @password, @bio, @image)";
+
+            // add Parameters
+            command.AddParameterWithValue("username", DbType.String, user.Username);
+            command.AddParameterWithValue("password", DbType.String, user.Password);
+            command.AddParameterWithValue("bio", DbType.String, user.Bio);
+            command.AddParameterWithValue("image", DbType.String, user.Image);
+
+            // execute query
+            ExecuteNonQuery(command);
         }
 
-        // public methods
-
         // READ
-        public User? Get(string username, string password)
-        {
-            // create Connection
-            using IDbConnection connection = new NpgsqlConnection(_connectionString);
-            connection.Open();
 
-            // create Command
-            using IDbCommand command = connection.CreateCommand();           
+        public User? GetUser(string username, string password)
+        {
+            // create command
+            using NpgsqlCommand command = new();
             command.CommandText = "SELECT * FROM users " +
                                   "WHERE username = @username " +
                                   "AND password = @password";
 
-            // add Parameters
+            // add parameters
             command.AddParameterWithValue("username", DbType.String, username);
             command.AddParameterWithValue("password", DbType.String, password);
 
-            // execute Command
-            using IDataReader reader = command.ExecuteReader();
+            // execute query
+            using IDataReader reader = ExecuteQuery(command);
 
             if (reader.Read())
             {
@@ -55,28 +64,23 @@ namespace MTCGServer.DataAccess.Repositorys
                     Currency = (int)reader["currency"]
                 };
             }
-
             return null;
         }
 
-        public User? Get(string token)
+        public User? GetUser(string token)
         {
-            // create Connection
-            using IDbConnection connection = new NpgsqlConnection(_connectionString);
-            connection.Open();
-
             // create Command
-            using IDbCommand command = connection.CreateCommand();
+            using NpgsqlCommand command = new();
             command.CommandText = "SELECT * FROM users " +
                                   "WHERE id = (SELECT userid FROM tokens WHERE token = @token)";
 
             // add parameters
             command.AddParameterWithValue("token", DbType.String, token);
 
-            // execute Command
-            using IDataReader reader = command.ExecuteReader();
+            // execute command
+            using IDataReader reader = ExecuteQuery(command);
 
-            if(reader.Read())
+            if (reader.Read())
             {
                 return new User()
                 {
@@ -91,59 +95,31 @@ namespace MTCGServer.DataAccess.Repositorys
             return null;
         }
 
-        // CREATE
-        public void Add(User toAdd)
-        {
-            // create Connection
-            using IDbConnection connection = new NpgsqlConnection(_connectionString);
-            connection.Open();
-
-            // create Command
-            using IDbCommand command = connection.CreateCommand();            
-            command.CommandText = "INSERT INTO users (username, password, bio, image) " +
-                                  "VALUES (@username, @password, @bio, @image)";
-
-            // add Parameters
-            command.AddParameterWithValue("username", DbType.String, toAdd.Username);
-            command.AddParameterWithValue("password", DbType.String, toAdd.Password);
-            command.AddParameterWithValue("bio", DbType.String, toAdd.Bio);
-            command.AddParameterWithValue("image", DbType.String, toAdd.Image);
-
-            // execute Command
-            command.ExecuteNonQuery();
-        }
 
         // UPDATE
+
         public void Update(User user)
         {
-            // create Connection
-            using IDbConnection connection = new NpgsqlConnection(_connectionString);
-            connection.Open();
-
             // create Command
-            using IDbCommand command = connection.CreateCommand();
+            using NpgsqlCommand command = new();
             command.CommandText = "UPDATE users " +
                                   "SET bio = @bio, image = @image, username = @username " +
                                   "WHERE id = @id";
 
-            // add Parameters
+            // add parameters
             command.AddParameterWithValue("bio", DbType.String, user.Bio);
             command.AddParameterWithValue("image", DbType.String, user.Image);
             command.AddParameterWithValue("username", DbType.String, user.Username);
             command.AddParameterWithValue("id", DbType.Int32, user.Id);
 
-            // execute Command
-            command.ExecuteNonQuery();
+            // execute query
+            ExecuteNonQuery (command);
         }
 
         public void PayCurrency(int userId, int amountToPay)
         {
-            // create Connection
-            using IDbConnection connection = new NpgsqlConnection(_connectionString);
-            connection.Open();
-
-            // create Command
-            using IDbCommand command = connection.CreateCommand();
+            // create command
+            using NpgsqlCommand command = new();
             command.CommandText = "UPDATE users " +
                                   "SET currency = currency - @amountToPay " +
                                   "WHERE id = @id";
@@ -152,10 +128,8 @@ namespace MTCGServer.DataAccess.Repositorys
             command.AddParameterWithValue("amountToPay", DbType.Int32, amountToPay);
             command.AddParameterWithValue("id", DbType.Int32, userId);
 
-            // execute command
-            command.ExecuteNonQuery();
+            // execute query
+            ExecuteNonQuery(command);
         }
-
-        // DELETE
     }
 }

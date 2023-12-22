@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCGServer.Models.UserModels
+namespace MTCGServer.Models.DataModels
 {
     public class User
     {

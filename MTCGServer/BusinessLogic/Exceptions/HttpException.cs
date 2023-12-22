@@ -10,17 +10,14 @@ namespace MTCGServer.BusinessLogic.Exceptions
     internal class HttpException : Exception
     {
         public string Header { get; } = "";
-        public Error Error { get; } = new();
+        public Error Error { get; } = new("");
 
         public HttpException() { }
         public HttpException(string header, string errorMessage) 
             : base(errorMessage) 
         {
             Header = header;
-            Error = new()
-            {
-                ErrorMessage = errorMessage
-            };
+            Error = new(errorMessage);
         }
     }
 }

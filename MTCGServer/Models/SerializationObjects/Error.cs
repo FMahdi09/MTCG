@@ -8,6 +8,11 @@ namespace MTCGServer.Models.SerializationObjects
 {
     internal class Error
     {
-        public string? ErrorMessage { get; set; }
+        public string ErrorMessage { get; set; }
+
+        public Error(string message)
+        {
+            ErrorMessage = message;
+        }
     }
 }

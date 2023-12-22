@@ -1,49 +1,35 @@
-﻿using System;
+﻿using MTCGServer.DataAccess.Base;
+using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MTCGServer.DataAccess.Repositorys
+namespace MTCGServer.DataAccess.Repositories
 {
-    public class TokenRepository
+    internal class TokenRepository : BaseRepository
     {
-        // private variables
-        private readonly string _connectionString;
-
         // constructor
-        public TokenRepository(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
-
-        // public methods
-
-        // READ
+        public TokenRepository(IDbConnection connection)
+            : base(connection) { }
 
         // CREATE
-        public void Add(string token, int userId)
+        
+        public void AddToken(int userId, string token)
         {
-            // create Connection
-            using IDbConnection connection = new Npgsql.NpgsqlConnection(_connectionString);
-            connection.Open();
-
-            // create Command
-            using IDbCommand command = connection.CreateCommand();
+            // create command
+            using IDbCommand command = new NpgsqlCommand();
             command.CommandText = "INSERT INTO tokens (token, userid) " +
                                   "VALUES (@token, @userid)";
 
-            // add Parameters
-            command.AddParameterWithValue("@token", DbType.String, token);
-            command.AddParameterWithValue("@userid", DbType.Int64, userId);
+            // add parameters
+            command.AddParameterWithValue("token", DbType.String, token);
+            command.AddParameterWithValue("userid", DbType.Int32, userId);
 
-            // execute Command
-            command.ExecuteNonQuery();
+            // execute command
+            ExecuteNonQuery(command);
         }
-
-        // UPDATE
-
-        // DELETE
     }
 }

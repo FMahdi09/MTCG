@@ -8,6 +8,11 @@ namespace MTCGServer.Models.SerializationObjects
 {
     internal class AuthToken
     {
-        public string? Token { get; set; }
+        public string Token { get; set; }
+
+        public AuthToken(string token)
+        {
+            Token = token;
+        }
     }
 }
